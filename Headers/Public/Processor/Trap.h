@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define CPU_TRAP_COUNT 32
+
 typedef enum exception_id
 {
   cpu_trap_data_abort,
