@@ -11,5 +11,8 @@
 #include <Processor/Timer.h>
 #include <Processor/Trap.h>
 
+extern uint64_t     cpu_cycles_per_ms;
+extern uint64_t     cpu_bus_cycles_per_ms;
+
 #endif
 

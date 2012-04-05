@@ -9,20 +9,12 @@
   unique="true"
   wrapper="false">
 
-  <id name="x86Processor" version="1.0"/>
-
-  <restrict>
-    <id name="SoclibPlatform" version="1.0"/>
-  </restrict>
+  <id name="ix86Processor" version="1.0"/>
 
   <provide>
 
     <context name="Cache">
       <type name="cpu_cache_t"/>
-
-      <definition name="CPU_ICACHE_SIZE_LOG2"/>
-      <definition name="CPU_DCACHE_SIZE_LOG2"/>
-      <definition name="CPU_CACHE_ALL"/>
 
       <method name="cpu_cache_sync" result=""/>
 
@@ -213,21 +205,11 @@
   </provide>
 
   <require>
-    <type name="soclib_aicu_port_t"/>
-    <type name="soclib_aicu_slot_t"/>
-    <type name="soclib_ipi_port_t"/>
-    <type name="soclib_timer_port_t"/>
-
     <definition name="PLATFORM_ENDIANNESS"/>
 
     <method name="system_kickstart" result=""/>
 
-    <method name="timer_callback" result=""/>
-
-    <method name="ipi_callback" result="">
-      <argument name="command" type="int32_t" direction="In"/>
-      <argument name="data" type="access" direction="In"/>
-    </method>
   </require>
 
 </APES:Interface>
+

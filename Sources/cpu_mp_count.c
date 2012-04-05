@@ -1,8 +1,10 @@
 #include <stdint.h>
 #include <Processor/Processor.h>
 
+extern int32_t CPU_COUNT;
+
 int32_t cpu_mp_count (void)
 {
-  return 1;
+    return CPU_COUNT;
 }
 

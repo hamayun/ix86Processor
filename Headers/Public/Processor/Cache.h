@@ -10,9 +10,6 @@ typedef enum cpu_cache
 }
 cpu_cache_t;
 
-#define CPU_ICACHE_SIZE_LOG2 3
-#define CPU_DCACHE_SIZE_LOG2 3
-
 #define CPU_CACHE_ALL 0xFFFFFFFF
 
 extern void cpu_cache_sync(void);
@@ -20,10 +17,10 @@ extern void cpu_cache_sync(void);
 /* Caches aren't brain-dead on the intel. */
 static inline void flush_cache_all(void) { }
 
-#define cpu_cache_invalidate(cache_type, address, words)	\
-{															\
-	flush_cache_all();										\
-}
+#define cpu_cache_invalidate(cache_type, address, words)    \
+do {                                                        \
+    flush_cache_all();                                      \
+} while (0)
 
 #endif
 

@@ -19,5 +19,5 @@
 
 void cpu_stop (void)
 {
-
 }
+

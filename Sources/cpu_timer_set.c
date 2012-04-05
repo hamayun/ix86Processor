@@ -17,15 +17,26 @@
 
 #include <Processor/Processor.h>
 #include <Platform/Platform.h>
+#include <Processor/apic_regs.h>
 
-void cpu_timer_set (int32_t id, bigtime_t deadline)
+/*
+ * TODO: Remove this platform specific Header
+ *       Move to Platform/Platform.h
+ */
+#include <PCPlatformDriver/Driver.h>
+
+void cpu_timer_set (int32_t id, bigtime_t ns)
 {
-  bigtime_t local_deadline = 0;
-  soclib_timer_port_t timer = & PLATFORM_TIMER_BASE[id];
+    uint32_t cycles;
 
-  local_deadline = deadline / PLATFORM_TIMER_RES;
+    // reset the counter
+    local_timer_mem[LAPIC_INITIAL_COUNTER >> 2] = 0;
+    
+    cycles = (uint32_t) ((cpu_bus_cycles_per_ms * (ns / 1000)) / (LOCAL_TIMER_DIVISOR * 1000));
+    if (cycles < 100)
+        cycles = 100;
 
-  cpu_write(UINT32, & (timer -> period), (uint32_t)local_deadline);
-  cpu_write(UINT32, & (timer -> mode), 3);
+    // set the counter (trigger it)
+    local_timer_mem[LAPIC_INITIAL_COUNTER >> 2] = cycles;
 }
 

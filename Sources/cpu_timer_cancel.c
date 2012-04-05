@@ -16,11 +16,17 @@
  */
 
 #include <Processor/Processor.h>
+#include <Processor/apic_regs.h>
 #include <Platform/Platform.h>
+
+/*
+ * TODO: Remove this platform specific Header
+ *       Move to Platform/Platform.h
+ */
+#include <PCPlatformDriver/Driver.h>
 
 void cpu_timer_cancel (int32_t id)
 {
-  soclib_timer_port_t timer = & PLATFORM_TIMER_BASE[id];
-  cpu_write(UINT32, & (timer -> mode), 1);
+    local_timer_mem[LAPIC_INITIAL_COUNTER >> 2] = 0;
 }
 

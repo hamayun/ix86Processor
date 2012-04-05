@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define CPU_TRAP_COUNT 32
+#define CPU_TRAP_COUNT 8
 
 typedef enum exception_id
 {
@@ -19,7 +19,7 @@ typedef int32_t (* exception_handler_t) (void * data);
 typedef int32_t (* interrupt_handler_t) (void * data);
 
 #define cpu_trap_count()	\
-	8
+	CPU_TRAP_COUNT
 
 extern void cpu_trap_attach_esr (int32_t cpuid, exception_id_t id,
 	exception_handler_t isr);

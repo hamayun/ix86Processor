@@ -17,13 +17,18 @@
 
 #include <Processor/Processor.h>
 #include <Platform/Platform.h>
+#include <Processor/apic_regs.h>
+
+/*
+ * TODO: Remove this platform specific Header
+ *       Move to Platform/Platform.h
+ */
+#include <PCPlatformDriver/Driver.h>
 
 void cpu_timer_get (int32_t id, bigtime_t * value)
 {
-  uint32_t local_value = 0;
-  soclib_timer_port_t timer = & PLATFORM_TIMER_BASE[id];
+    uint64_t crt_cycles = get_cycles ();
 
-  cpu_read (UINT32, & (timer -> value), local_value);
-  *value = (bigtime_t)local_value * PLATFORM_TIMER_RES;
+    *value = (crt_cycles * 1000) / (cpu_cycles_per_ms / 1000);
 }
 

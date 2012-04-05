@@ -2,12 +2,10 @@
 
 interrupt_status_t cpu_trap_mask_and_backup (void)
 {
-  interrupt_status_t cpsr = 0;
+    int32_t flags = 0;
 
-  __asm__ volatile (
-	"cli"
-      );
+    __asm__ volatile ("pushf;pop %0;cli": "=a" (flags));
 
-  return cpsr;
+    return flags;
 }
 

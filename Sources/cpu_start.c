@@ -21,6 +21,6 @@ extern void system_kickstart (void);
 
 void cpu_start (void)
 {
-  system_kickstart ();
+    system_kickstart ();
 }
 
