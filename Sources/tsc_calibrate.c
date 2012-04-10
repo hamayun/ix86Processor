@@ -20,6 +20,15 @@
 uint64_t                    cpu_cycles_per_ms __attribute__((__section__(".data")));
 uint64_t                    cpu_bus_cycles_per_ms __attribute__((__section__(".data")));
 
+void blocking_usleep (int us)
+{
+	uint64_t        tsc_end;
+	
+	tsc_end = get_cycles () + (us * cpu_cycles_per_ms) / 1000;
+	
+	while (get_cycles () < tsc_end) ;
+}
+
 void tsc_calibrate ()
 {
 	uint64_t        tsc_start, tsc_delta;
@@ -36,13 +45,13 @@ void tsc_calibrate ()
 	outb (CALIBRATE_LATCH >> 8, PIT_COUNTER_2);
 
 	tsc_start = get_cycles ();
-	local_timer_mem[LAPIC_INITIAL_COUNTER >> 2] = 0xFFFFFFFF;
+	local_apic_mem[LAPIC_INITIAL_COUNTER >> 2] = 0xFFFFFFFF;
 	while ((inb (0x61) & 0x20) == 0)
 	    ;
-    local_timer_end = local_timer_mem[LAPIC_CURRENT_COUNTER >> 2];
+    local_timer_end = local_apic_mem[LAPIC_CURRENT_COUNTER >> 2];
 	tsc_delta = get_cycles () - tsc_start;
 
-    local_timer_mem[LAPIC_INITIAL_COUNTER >> 2] = 0;
+    local_apic_mem[LAPIC_INITIAL_COUNTER >> 2] = 0;
     outb (old61, 0x61);
 
     cpu_cycles_per_ms = tsc_delta / CALIBRATE_MS;

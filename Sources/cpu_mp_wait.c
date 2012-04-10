@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <Processor/Processor.h>
+#include <PCPlatformDriver/Driver.h>
 
 void cpu_mp_wait (void)
 {

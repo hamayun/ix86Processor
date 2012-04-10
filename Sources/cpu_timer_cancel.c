@@ -27,6 +27,6 @@
 
 void cpu_timer_cancel (int32_t id)
 {
-    local_timer_mem[LAPIC_INITIAL_COUNTER >> 2] = 0;
+    local_apic_mem[LAPIC_INITIAL_COUNTER >> 2] = 0;
 }
 

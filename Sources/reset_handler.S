@@ -1,6 +1,3 @@
-//	extern system_kickstart
-//	extern CPU_SYS_STACK_ADDR
-
 GDT_ENTRY_BOOT_CS               = 2
 __BOOT_CS                       = 16
 
@@ -12,11 +9,16 @@ IDT_ENTRIES                     = 256
 LOCAL_APIC_BASE                 = 0xFEE00000
 LAPIC_CPU_ID                    = 0x020
 LAPIC_EOI                       = 0x0B0
+LAPIC_SPURIOUS                  = 0x0F0
+LAPIC_ICR_LOW                   = 0x300
+LAPIC_LVT_ERR                   = 0x370
 LOCAL_TIMER_LVT                 = 0x320
 LOCAL_TIMER_INITIAL_COUNTER     = 0x380
 LOCAL_TIMER_CURRENT_COUNTER     = 0x390
 LOCAL_COUNTER_DIVIDER           = 0x3E0
 LOCAL_TIMER_VECTOR              = 0XEF
+LAPIC_ERROR_VECTOR              = 0xEE
+LAPIC_IPI_VECTOR                = 0xED
 
     .code32
     .section ".reset","ax"
@@ -24,48 +26,48 @@ LOCAL_TIMER_VECTOR              = 0XEF
     .globl reset_handler;
 reset_handler:
 
-    cmpw    $0xAA55, 0x0D(%esi)
-    je      1f #only the header
-    testb   $(1<<6), 0x211(%esi)
-    jnz     2f
-1:
-    testb   $(1<<6), 0x20(%esi)    
-    jnz     2f
-
     lgdt    boot_gdt_descr
     movl    $__BOOT_DS,%eax
     movl    %eax, %ds
     movl    %eax, %es
     movl    %eax, %fs
     movl    %eax, %gs
-2:
+
     ljmp    $__BOOT_CS, $3f    /* Clear prefetch and normalize %eip */
 
 3:
-    # §§Get the current cpuid
-    movl    $0, %eax
+    cmp     $1, first_cpu
+    jne     4f
+    movl    $0, first_cpu
+    movl    CPU_SYS_STACK_ADDR, %esp
+    call    idt_setup
+    call    local_apic_setup
 
+    call    tsc_calibrate
+    sti
+    jmp     5f
+
+4:
+    lidt    boot_idt_descr      # cpu != 0
+    call    local_apic_setup
+    
     # Compute the basic stack addresses
+    call    cpu_mp_id
+    mov     %eax, %ebp
     mov     $0x400, %ecx
     mul     %ecx
     movl    CPU_SYS_STACK_ADDR, %ecx
     subl    %eax, %ecx
     movl    %ecx, %esp
-
-    call    idt_setup
     
-    call    local_apic_setup
- 
-    call    tsc_calibrate
-    
-#    movl    $0xFFFF, (LOCAL_APIC_BASE + LOCAL_TIMER_INITIAL_COUNTER)
     sti
-    
-    # Call to system kickstart
-    movl    $system_kickstart, %eax
+
+5:
+    # Call cpu_start
+    movl    $cpu_start, %eax
     jmp     * %eax
     nop
-    
+
 idt_setup:
     lea     ignore_int, %edx
     movl    $__BOOT_CS << 16, %eax
@@ -95,10 +97,23 @@ rp_sidt:
     set_early_handler handler = illegal_opcode, trapno = 6
     set_early_handler handler = protection_fault, trapno = 13
     set_early_handler handler = timer_int, trapno = LOCAL_TIMER_VECTOR
+    set_early_handler handler = ipi_int, trapno = LAPIC_IPI_VECTOR
+    set_early_handler handler = lapic_error_int, trapno = LAPIC_ERROR_VECTOR
 
     lidt    boot_idt_descr
 
     ret /*idt_setup*/
+
+lapic_error_int:
+    pusha
+    call    cpu_mp_id
+    push    %eax
+    push    $msg_lapic_error
+    call    tty_print_info
+    add     $8, %esp
+    popa
+
+    iret /* lapic_error_int */
 
 local_apic_setup:
 	movl    $1, %eax            # see if this cpu has rdmsr/wrmsr instructions
@@ -119,6 +134,9 @@ apic_default:
     # divide by 1
     movl    $0x0B,  (LOCAL_APIC_BASE + LOCAL_COUNTER_DIVIDER)
     movl    $0x00, (LOCAL_APIC_BASE + LOCAL_TIMER_INITIAL_COUNTER)
+    movl    (LOCAL_APIC_BASE + LAPIC_SPURIOUS), %eax    #enable IPI
+    orl     $0x100, %eax
+    movl    %eax, (LOCAL_APIC_BASE + LAPIC_SPURIOUS)
 
     ret                         # local_apic_setup
 no_lapic:
@@ -141,19 +159,23 @@ protection_fault:
     jmp     fatal_fault
 
 fatal_fault:
+    call    cpu_mp_id
+    push    %eax
     push    %edx
     push    $msg_fatal_fault
     call    tty_print_info
-    add     $8, %esp
-    jmp _hell_pit
+    add     $0x0C, %esp
+    jmp     _hell_pit
 
     /* default interrupt handler */
     .align  4
 ignore_int:
     pusha
+    call    cpu_mp_id
+    push    %eax
     push    $msg_ignored_int
     call    tty_print_info
-    add     $4, %esp
+    add     $8, %esp
     popa
 
     iret
@@ -162,9 +184,11 @@ ignore_int:
 timer_int:
     pusha
 
-/*    push    $msg_timer_int*/
-/*    call    tty_print_info*/
-/*    add     $4, %esp*/
+    # call    cpu_mp_id
+    # push    %eax
+    # push    $msg_timer_int
+    # call    tty_print_info
+    # add     $8, %esp
     
     pushl   $1
     movl    isr_timer, %eax
@@ -178,15 +202,40 @@ timer_int:
 
     iret
 
+    .align 4
+ipi_int:
+    pusha
+
+    # call    cpu_mp_id
+    # push    %eax
+    # push    $msg_timer_int
+    # call    tty_print_info
+    # add     $8, %esp
+    
+    pushl   $1
+    movl    isr_ipi, %eax
+    call    * %eax
+    add     $4, %esp
+
+    #EOI
+    movl    $0, (LAPIC_EOI + LOCAL_APIC_BASE)
+
+    popa
+
+    iret
+
 _hell_pit:
+    call    cpu_mp_id
+    push    %eax
     pushl   $msg_hell_pit
     call    tty_print_info
-    add     $4, %esp
+    add     $8, %esp
     hlt
     jmp     _hell_pit
 
 .data
     .align  4
+first_cpu: .long 1
     .globl  boot_gdt_descr
 boot_gdt_descr:
     .word   __BOOT_DS + 7
@@ -211,9 +260,10 @@ boot_idt_table:
     .fill   IDT_ENTRIES, 8, 0
 
     # messages
-msg_ignored_int: .string "An ignored interrupt occured.\n"
-msg_fatal_fault: .string "Fatal interrupt %d occured (code %d).\n"
-msg_hell_pit: .string "Hell pit reached.\n"
+msg_ignored_int: .string "An ignored interrupt occured on cpu %ld.\n"
+msg_fatal_fault: .string "Fatal interrupt %ld (code 0x%lx) occured on cpu %ld.\n"
+msg_hell_pit: .string "Hell pit reached by cpu %ld.\n"
 msg_no_lapic: .string "No local local APIC found on this computer.\n"
-msg_timer_int: .string "Timer interrupt occured.\n"
+msg_timer_int: .string "Timer interrupt occured on cpu %ld.\n"
+msg_lapic_error: .string "Local APIC error interrupt occured on cpu %ld.\n"
 

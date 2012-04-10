@@ -9,17 +9,19 @@
 
 void cpu_trap_disable (interrupt_id_t id)
 {
-   uint32_t    val;
+    uint32_t    val;
 
     switch (id)
     {
     case 0: //IPI
-        //§§IPI
+            val = local_apic_mem[LAPIC_SPURIOUS >> 2];
+            val &= ~0x100;
+            local_apic_mem[LAPIC_SPURIOUS >> 2] = val;
         break;
     case 1: //TIMER
-            val = local_timer_mem[LAPIC_TIMER_LVT >> 2];
-            val &= ~0x10000;
-            local_timer_mem[LAPIC_TIMER_LVT >> 2] = val;
+            val = local_apic_mem[LAPIC_TIMER_LVT >> 2];
+            val |= 0x10000;
+            local_apic_mem[LAPIC_TIMER_LVT >> 2] = val;
         break;
     
     }
