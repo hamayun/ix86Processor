@@ -28,7 +28,7 @@ BUILDIO(l, , int)
 #define cpu_write_UINT8(port,value)                                   \
     outb (value, (int) port)
 
-#define cpu_write_UINT16(addr,value)                                  \
+#define cpu_write_UINT16(port,value)                                  \
     outw (value, (int) port)
 
 #define cpu_write_UINT32(port,value)                                  \
