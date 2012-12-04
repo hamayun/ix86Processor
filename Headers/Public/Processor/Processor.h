@@ -12,6 +12,7 @@
 #include <Processor/Trap.h>
 
 void blocking_usleep (int us);
+void blocking_nsleep (int ns);
 
 extern uint64_t             cpu_cycles_per_ms;
 extern uint64_t             cpu_bus_cycles_per_ms;

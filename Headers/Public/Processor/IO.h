@@ -3,6 +3,48 @@
 
 #include <stdint.h>
 
+
+void cpu_vector_transfer (void * source, void * destination, uint32_t count);
+
+#if 0
+
+#define cpu_write(type,addr,value) cpu_io_write(type,addr,value)
+#define cpu_read(type,addr,value) cpu_io_read(type,addr,value)
+
+#else
+
+#define cpu_write(type,addr,value) cpu_write_##type(addr,value)
+
+#define cpu_write_UINT8(addr,value)                                   \
+	 *((volatile uint8_t *)(addr)) = (value)
+
+#define cpu_write_UINT16(addr,value)                                  \
+	 *((volatile uint16_t *)(addr)) = (value)
+
+#define cpu_write_UINT32(addr,value)                                  \
+	 *((volatile uint32_t *)(addr)) = (value)
+
+/*
+ * Read operations.
+ */
+
+#define cpu_read(type,addr,value) cpu_read_##type(addr,value)
+
+#define cpu_read_UINT8(addr,value)                                    \
+	 (value) = *(volatile uint8_t *)(addr)
+
+#define cpu_read_UINT16(addr, value)                                  \
+	 (value) = *(volatile uint16_t *)(addr)
+
+#define cpu_read_UINT32(addr,value)                                   \
+	 (value) = *(volatile uint32_t *)(addr)
+
+#endif
+
+/*
+ * I/O operations.
+ */
+
 #define BUILDIO(bwl, bw, type) \
 static inline void out##bwl (unsigned type value, int port) \
 { \
@@ -22,32 +64,31 @@ BUILDIO(b, b, char)
 BUILDIO(w, w, short)
 BUILDIO(l, , int)
 
+#define cpu_io_write(type,addr,value) cpu_io_write_##type(addr,value)
 
-#define cpu_write(type,addr,value) cpu_write_##type(addr,value)
-
-#define cpu_write_UINT8(port,value)                                   \
+#define cpu_io_write_UINT8(port,value)                                \
     outb (value, (int) port)
 
-#define cpu_write_UINT16(port,value)                                  \
+#define cpu_io_write_UINT16(port,value)                               \
     outw (value, (int) port)
 
-#define cpu_write_UINT32(port,value)                                  \
+#define cpu_io_write_UINT32(port,value)                               \
     outl (value,(int) port)
 
 /*
  * Read operations.
  */
 
-#define cpu_read(type,addr,value) cpu_read_##type(addr,value)
+#define cpu_io_read(type,addr,value) cpu_io_read_##type(addr,value)
 
-#define cpu_read_UINT8(addr,value)                                    \
-    (value) = inb (addr)
+#define cpu_io_read_UINT8(port,value)                                 \
+    (value) = inb (port)
 
-#define cpu_read_UINT16(addr, value)                                  \
-    (value) = inw (addr)
+#define cpu_io_read_UINT16(port, value)                               \
+    (value) = inw (port)
 
-#define cpu_read_UINT32(addr,value)                                   \
-    (value) = inl (addr)
+#define cpu_io_read_UINT32(port,value)                                \
+    (value) = inl (port)
 
 /*
  * Uncached operations.

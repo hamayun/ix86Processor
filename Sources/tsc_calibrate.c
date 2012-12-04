@@ -29,6 +29,16 @@ void blocking_usleep (int us)
 	while (get_cycles () < tsc_end) ;
 }
 
+void blocking_nsleep (int ns)
+{
+	uint64_t        tsc_end;
+	
+	tsc_end = get_cycles () + (ns * cpu_cycles_per_ms) / 1000000;
+	
+	while (get_cycles () < tsc_end) ;
+}
+
+
 void tsc_calibrate ()
 {
 	uint64_t        tsc_start, tsc_delta;
