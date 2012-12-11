@@ -20,6 +20,8 @@
 #include <Processor/apic_regs.h>
 #include <string.h>
 
+#include "i8259.h"
+
 extern void system_kickstart (void);
 
 void smp_init (void)
@@ -56,6 +58,8 @@ void smp_init (void)
     }
 
     tty_print_info ("%d processors booted.\n", no_cpus_up);
+
+    i8259_init();
 }
 
 void cpu_start (void)

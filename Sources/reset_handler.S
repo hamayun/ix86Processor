@@ -71,8 +71,8 @@ reset_handler:
 idt_setup:
     lea     ignore_int, %edx
     movl    $__BOOT_CS << 16, %eax
-    movw    %dx, %ax        /* selector = 0x0010 = cs */
-    movw    $0x8E00, %dx    /* interrupt gate - dpl=0, present */
+    movw    %dx, %ax
+    movw    $0x8E00, %dx
 
     lea     boot_idt_table, %edi
     mov     $256, %ecx
@@ -87,7 +87,7 @@ rp_sidt:
             lea     \handler, %edx
             movl    $__BOOT_CS << 16, %eax
             movw    %dx, %ax
-            movw    $0x8E00, %dx    /* interrupt gate - dpl=0, present */
+            movw    $0x8E00, %dx
             lea     boot_idt_table, %edi
             movl    %eax,8 * \trapno (%edi)
             movl    %edx, 8 * \trapno + 4(%edi)
@@ -99,6 +99,24 @@ rp_sidt:
     set_early_handler handler = timer_int, trapno = LOCAL_TIMER_VECTOR
     set_early_handler handler = ipi_int, trapno = LAPIC_IPI_VECTOR
     set_early_handler handler = lapic_error_int, trapno = LAPIC_ERROR_VECTOR
+
+    /* TODO: WE SHOULD USE I8259_VECTOR_OFFSET VARIABLE HERE */
+    set_early_handler handler = i8259_irq_0, trapno = 32
+    set_early_handler handler = i8259_irq_1, trapno = 33
+    set_early_handler handler = i8259_irq_2, trapno = 34
+    set_early_handler handler = i8259_irq_3, trapno = 35
+    set_early_handler handler = i8259_irq_4, trapno = 36
+    set_early_handler handler = i8259_irq_5, trapno = 37
+    set_early_handler handler = i8259_irq_6, trapno = 38
+    set_early_handler handler = i8259_irq_7, trapno = 39
+    set_early_handler handler = i8259_irq_8, trapno = 40
+    set_early_handler handler = i8259_irq_9, trapno = 41
+    set_early_handler handler = i8259_irq_10, trapno = 42
+    set_early_handler handler = i8259_irq_11, trapno = 43
+    set_early_handler handler = i8259_irq_12, trapno = 44
+    set_early_handler handler = i8259_irq_13, trapno = 45
+    set_early_handler handler = i8259_irq_14, trapno = 46
+    set_early_handler handler = i8259_irq_15, trapno = 47
 
     lidt    boot_idt_descr
 
