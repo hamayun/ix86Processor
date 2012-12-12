@@ -7,5 +7,7 @@ void i8259_init(void);
 void i8259_enable(int irq);
 void i8259_disable(int irq);
 
+extern interrupt_handler_t isr_i8259[16];
+
 #endif
 

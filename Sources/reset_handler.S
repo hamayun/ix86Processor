@@ -40,7 +40,7 @@ reset_handler:
     jne     4f
     movl    $0, first_cpu
     movl    CPU_SYS_STACK_ADDR, %esp
-    call    idt_setup
+    call    cpu_idt_init
     call    local_apic_setup
 
     call    tsc_calibrate
@@ -48,7 +48,7 @@ reset_handler:
     jmp     5f
 
 4:
-    lidt    boot_idt_descr      # cpu != 0
+    lidt    idt_desc      # cpu != 0
     call    local_apic_setup
     
     # Compute the basic stack addresses
@@ -68,60 +68,7 @@ reset_handler:
     jmp     * %eax
     nop
 
-idt_setup:
-    lea     ignore_int, %edx
-    movl    $__BOOT_CS << 16, %eax
-    movw    %dx, %ax
-    movw    $0x8E00, %dx
-
-    lea     boot_idt_table, %edi
-    mov     $256, %ecx
-rp_sidt:
-    movl    %eax, (%edi)
-    movl    %edx, 4(%edi)
-    addl    $8, %edi
-    dec     %ecx
-    jne     rp_sidt
-
-    .macro  set_early_handler handler, trapno
-            lea     \handler, %edx
-            movl    $__BOOT_CS << 16, %eax
-            movw    %dx, %ax
-            movw    $0x8E00, %dx
-            lea     boot_idt_table, %edi
-            movl    %eax,8 * \trapno (%edi)
-            movl    %edx, 8 * \trapno + 4(%edi)
-    .endm
-
-    set_early_handler handler = divide_err, trapno = 0
-    set_early_handler handler = illegal_opcode, trapno = 6
-    set_early_handler handler = protection_fault, trapno = 13
-    set_early_handler handler = timer_int, trapno = LOCAL_TIMER_VECTOR
-    set_early_handler handler = ipi_int, trapno = LAPIC_IPI_VECTOR
-    set_early_handler handler = lapic_error_int, trapno = LAPIC_ERROR_VECTOR
-
-    /* TODO: WE SHOULD USE I8259_VECTOR_OFFSET VARIABLE HERE */
-    set_early_handler handler = i8259_irq_0, trapno = 32
-    set_early_handler handler = i8259_irq_1, trapno = 33
-    set_early_handler handler = i8259_irq_2, trapno = 34
-    set_early_handler handler = i8259_irq_3, trapno = 35
-    set_early_handler handler = i8259_irq_4, trapno = 36
-    set_early_handler handler = i8259_irq_5, trapno = 37
-    set_early_handler handler = i8259_irq_6, trapno = 38
-    set_early_handler handler = i8259_irq_7, trapno = 39
-    set_early_handler handler = i8259_irq_8, trapno = 40
-    set_early_handler handler = i8259_irq_9, trapno = 41
-    set_early_handler handler = i8259_irq_10, trapno = 42
-    set_early_handler handler = i8259_irq_11, trapno = 43
-    set_early_handler handler = i8259_irq_12, trapno = 44
-    set_early_handler handler = i8259_irq_13, trapno = 45
-    set_early_handler handler = i8259_irq_14, trapno = 46
-    set_early_handler handler = i8259_irq_15, trapno = 47
-
-    lidt    boot_idt_descr
-
-    ret /*idt_setup*/
-
+    .global lapic_error_int
 lapic_error_int:
     pusha
     call    cpu_mp_id
@@ -162,16 +109,19 @@ no_lapic:
     call    tty_print_info
     jmp     _hell_pit
 
+    .global divide_err
 divide_err:
     xor     %edx, %edx
     pushl   $0    /* fake errcode */
     jmp     fatal_fault
 
+    .global illegal_opcode
 illegal_opcode:
     movl    $6, %edx
     pushl   $0    /* fake errcode */
     jmp     fatal_fault
 
+    .global protection_fault
 protection_fault:
     movl    $13, %edx
     jmp     fatal_fault
@@ -198,6 +148,7 @@ ignore_int:
 
     iret
 
+    .global timer_int
     .align 4
 timer_int:
     pusha
@@ -220,6 +171,7 @@ timer_int:
 
     iret
 
+    .global ipi_int
     .align 4
 ipi_int:
     pusha
@@ -267,14 +219,14 @@ boot_gdt:
     .quad   0x00cf93000000ffff // flat 32-bit data segment
 
     .align  4
-    .globl  boot_idt_descr
-boot_idt_descr:
+    .globl  idt_desc
+idt_desc:
     .word   IDT_ENTRIES * 8 - 1   # idt contains 256 entries
-    .long   boot_idt_table
+    .long   idt
     
     .align  16
-    .globl  boot_idt_table
-boot_idt_table:
+    .globl  idt
+idt:
     .fill   IDT_ENTRIES, 8, 0
 
     # messages

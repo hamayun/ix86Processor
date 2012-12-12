@@ -1,23 +1,30 @@
 #define I8259_MASTER_IRQ(id) \
-.globl i8259_irq_##id; \
+.text; \
 i8259_irq_##id: \
     pusha; \
     push $(id); \
     call i8259_master_handler; \
     add $4, %esp; \
     popa; \
-    iret
+    iret; \
+.data; \
+    .long i8259_irq_##id
 
 #define I8259_SLAVE_IRQ(id) \
-.globl i8259_irq_##id; \
+.text; \
 i8259_irq_##id: \
     pusha; \
     push $(id); \
     call i8259_slave_handler; \
     add $4, %esp; \
     popa; \
-    iret
+    iret; \
+.data; \
+    .long i8259_irq_##id
 
+.data
+.global i8259_irq
+i8259_irq:
 I8259_MASTER_IRQ(0)
 I8259_MASTER_IRQ(1)
 I8259_MASTER_IRQ(2)
