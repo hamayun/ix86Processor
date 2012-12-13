@@ -136,7 +136,7 @@ fatal_fault:
     jmp     _hell_pit
 
     /* default interrupt handler */
-    .align  4
+    .global ignore_int
 ignore_int:
     pusha
     call    cpu_mp_id
@@ -149,7 +149,6 @@ ignore_int:
     iret
 
     .global timer_int
-    .align 4
 timer_int:
     pusha
 
