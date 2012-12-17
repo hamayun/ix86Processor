@@ -137,7 +137,7 @@ BUILDIO(l, , int)
 
 #define cpu_vector_read(mode,to,from,len) cpu_vector_write_##mode(to,from,len)
 
-inline uint64_t get_cycles (void)
+static inline uint64_t get_cycles (void)
 {
     uint32_t        lo, hi;
     __asm__ __volatile__ (

@@ -8,6 +8,7 @@
 #include <PCPlatformDriver/Driver.h>
 
 #include "i8259.h"
+#include "io_apic.h"
 
 void cpu_trap_disable (interrupt_id_t id)
 {
@@ -29,6 +30,9 @@ void cpu_trap_disable (interrupt_id_t id)
         if(id >= i8259_VECTOR_OFFSET && id < (i8259_VECTOR_OFFSET + 16)) {
             i8259_disable(id - i8259_VECTOR_OFFSET);
         }
+        else if(id >= IO_APIC_VECTOR_OFFSET && id < (IO_APIC_VECTOR_OFFSET + 24)) {
+            io_apic_disable(id - IO_APIC_VECTOR_OFFSET);
+        } 
         break;    
     }
 }

@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include "i8259.h"
+#include "io_apic.h"
 
 extern void system_kickstart (void);
 
@@ -60,6 +61,7 @@ void smp_init (void)
     tty_print_info ("%d processors booted.\n", no_cpus_up);
 
     i8259_init();
+    io_apic_init();
 }
 
 void cpu_start (void)

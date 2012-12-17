@@ -42,12 +42,11 @@ reset_handler:
     movl    CPU_SYS_STACK_ADDR, %esp
     call    cpu_idt_init
     call    local_apic_setup
-
     call    tsc_calibrate
     sti
     jmp     5f
 
-4:
+4: # cpu > 1
     lidt    idt_desc      # cpu != 0
     call    local_apic_setup
     

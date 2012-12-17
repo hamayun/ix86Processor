@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "i8259.h"
+#include "io_apic.h"
 
 #define KERNEL_CS 0x10
 
@@ -77,6 +78,7 @@ extern void ignore_int(void);
 #define LAPIC_IPI_VECTOR 0xED
 
 extern void *i8259_irq[16];
+extern void *io_apic_irq[24];
 
 void cpu_idt_init(void) {
     int i;
@@ -95,6 +97,10 @@ void cpu_idt_init(void) {
 
     for(i=0; i<16; i++) {
         set_intr_gate(i8259_VECTOR_OFFSET + i, i8259_irq[i]);
+    }
+
+    for(i=0; i<24; i++) {
+        set_intr_gate(IO_APIC_VECTOR_OFFSET + i, io_apic_irq[i]);
     }
 
     idt_desc.limit = sizeof(idt) - 1;

@@ -72,3 +72,9 @@ void i8259_disable(int irq) {
         outb(inb(0xa1) | (1 << (irq - 8)), 0xa1);
     }
 }
+
+void i8259_shutdown(void) {
+    outb(0xff, 0x21);
+    outb(0xff, 0xa1);
+}
+
