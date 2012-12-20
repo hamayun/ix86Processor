@@ -1,9 +1,3 @@
-GDT_ENTRY_BOOT_CS               = 2
-__BOOT_CS                       = 16
-
-GDT_ENTRY_BOOT_DS               = 3
-__BOOT_DS                       = 24
-
 IDT_ENTRIES                     = 256
 
 LOCAL_APIC_BASE                 = 0xFEE00000
@@ -25,17 +19,8 @@ LAPIC_IPI_VECTOR                = 0xED
 
     .globl reset_handler;
 reset_handler:
-
-    lgdt    boot_gdt_descr
-    movl    $__BOOT_DS,%eax
-    movl    %eax, %ds
-    movl    %eax, %es
-    movl    %eax, %fs
-    movl    %eax, %gs
-
-    ljmp    $__BOOT_CS, $3f    /* Clear prefetch and normalize %eip */
-
-3:
+    cli
+    call    gdt_init
     cmp     $1, first_cpu
     jne     4f
     movl    $0, first_cpu
@@ -43,11 +28,11 @@ reset_handler:
     call    cpu_idt_init
     call    local_apic_setup
     call    tsc_calibrate
-    sti
+    #sti
     jmp     5f
 
 4: # cpu > 1
-    lidt    idt_desc      # cpu != 0
+    lidt    idtdesc      # cpu != 0
     call    local_apic_setup
     
     # Compute the basic stack addresses
@@ -59,7 +44,7 @@ reset_handler:
     subl    %eax, %ecx
     movl    %ecx, %esp
     
-    sti
+    #sti
 
 5:
     # Call cpu_start
@@ -145,6 +130,9 @@ ignore_int:
     add     $8, %esp
     popa
 
+    #EOI
+    movl    $0, (LAPIC_EOI + LOCAL_APIC_BASE)
+
     iret
 
     .global timer_int
@@ -204,30 +192,22 @@ _hell_pit:
 .data
     .align  4
 first_cpu: .long 1
-    .globl  boot_gdt_descr
-boot_gdt_descr:
-    .word   __BOOT_DS + 7
-    .long   boot_gdt
 
-    .align  16
-    .globl  boot_gdt
-boot_gdt:
-    .fill   GDT_ENTRY_BOOT_CS, 8, 0
-    .quad   0x00cf9b000000ffff // flat 32-bit code segment
-    .quad   0x00cf93000000ffff // flat 32-bit data segment
-
-    .align  4
-    .globl  idt_desc
-idt_desc:
-    .word   IDT_ENTRIES * 8 - 1   # idt contains 256 entries
-    .long   idt
-    
-    .align  16
-    .globl  idt
+.global gdtdesc, gdt, idtdesc, idt
+.align 4
+gdtdesc:
+    .fill 6, 1, 0
+.align  16
+gdt:
+    .fill   6, 8, 0
+.align  4
+idtdesc:
+    .fill 6, 1, 0
+.align  16
 idt:
     .fill   IDT_ENTRIES, 8, 0
 
-    # messages
+# messages
 msg_ignored_int: .string "An ignored interrupt occured on cpu %ld.\n"
 msg_fatal_fault: .string "Fatal interrupt %ld (code 0x%lx) occured on cpu %ld.\n"
 msg_hell_pit: .string "Hell pit reached by cpu %ld.\n"

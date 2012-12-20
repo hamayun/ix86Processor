@@ -95,7 +95,7 @@ void io_apic_init(void) {
     for(i=0; i<24; i++) {
         struct IO_APIC_route_entry entry;
         entry = io_apic_read_entry(0xFEC00000, i);
-        dna_printf("apic[%d]: %d.%d.%d, ", i, entry.vector, entry.mask, entry.delivery_mode);
+        //dna_printf("apic[%d]: %d.%d.%d, ", i, entry.vector, entry.mask, entry.delivery_mode);
 
         memset(&entry, 0, sizeof(struct IO_APIC_route_entry));
 

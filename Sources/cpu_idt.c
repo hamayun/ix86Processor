@@ -1,6 +1,8 @@
 #include <Processor/Processor.h>
 #include <string.h>
 
+#include "cpu.h"
+
 #include "i8259.h"
 #include "io_apic.h"
 
@@ -8,12 +10,7 @@
 
 #define IDT_ENTRIES 256
 extern unsigned long long idt[IDT_ENTRIES];
-extern struct pseudo_descriptor idt_desc;
-
-struct pseudo_descriptor {
-    unsigned short limit;
-    unsigned long linear_base;
-} __attribute__ ((aligned(2), packed));
+extern struct pseudo_descriptor idtdesc;
 
 enum {
   GATE_INTERRUPT = 0xE,
@@ -103,9 +100,9 @@ void cpu_idt_init(void) {
         set_intr_gate(IO_APIC_VECTOR_OFFSET + i, io_apic_irq[i]);
     }
 
-    idt_desc.limit = sizeof(idt) - 1;
-    idt_desc.linear_base = (unsigned long) &idt;
+    idtdesc.limit = sizeof(idt) - 1;
+    idtdesc.linear_base = (unsigned long) &idt;
 
-    __asm__ __volatile__("lidt %0" :: "m" (idt_desc.limit));
+    __asm__ __volatile__("lidt %0" :: "m" (idtdesc.limit));
 }
 

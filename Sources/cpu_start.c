@@ -47,7 +47,7 @@ void smp_init (void)
     {
         local_apic_mem[LAPIC_ICR_HIGH >> 2] = cpu << 24;
         local_apic_mem[LAPIC_ICR_LOW >> 2] = 0x00004630;
-        
+
         for (i = 0; i < 1000; i++)
         {
             blocking_usleep (100);
@@ -66,17 +66,24 @@ void smp_init (void)
 
 void cpu_start (void)
 {
-    int32_t     cpu = cpu_mp_id ();
+    int32_t cpu = cpu_mp_id ();
 
-    if (!cpu)
+    if (!cpu) {
         smp_init ();
-     else
-     {
+    }
+    else {
+        // CD: infinite loop for secondary processors, because dal channels are not yet thread-safe
+        //while(1) {
+        //    __asm__ __volatile__ ("hlt");
+        //}
+
         no_cpus_up++;
         cpus_up_mask |= 1 << cpu;
-        
+
         tty_print_info ("Secondary CPU %d booted.\n", cpu);
-     }
+    }
+
+    __asm__ __volatile__ ("sti");
 
     system_kickstart ();
 }
