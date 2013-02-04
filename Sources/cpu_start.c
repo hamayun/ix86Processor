@@ -56,6 +56,11 @@ void smp_init (void)
     }
 
     tty_print_info ("%d processors booted.\n", no_cpus_up);
+
+    i8259_init();
+#if 0
+    io_apic_init();
+#endif
 }
 
 void cpu_start (void)
