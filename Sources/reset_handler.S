@@ -1,9 +1,3 @@
-GDT_ENTRY_BOOT_CS               = 2
-__BOOT_CS                       = 16
-
-GDT_ENTRY_BOOT_DS               = 3
-__BOOT_DS                       = 24
-
 IDT_ENTRIES                     = 256
 
 LOCAL_APIC_BASE                 = 0xFEE00000
@@ -21,34 +15,24 @@ LAPIC_ERROR_VECTOR              = 0xEE
 LAPIC_IPI_VECTOR                = 0xED
 
     .code32
-    .section ".reset","ax"
+    .section ".reset", "ax"
 
     .globl reset_handler;
 reset_handler:
-
-    lgdt    boot_gdt_descr
-    movl    $__BOOT_DS,%eax
-    movl    %eax, %ds
-    movl    %eax, %es
-    movl    %eax, %fs
-    movl    %eax, %gs
-
-    ljmp    $__BOOT_CS, $3f    /* Clear prefetch and normalize %eip */
-
-3:
+    cli
+    call    gdt_init
     cmp     $1, first_cpu
     jne     4f
     movl    $0, first_cpu
     movl    CPU_SYS_STACK_ADDR, %esp
-    call    idt_setup
+    call    cpu_idt_init
     call    local_apic_setup
-
     call    tsc_calibrate
-    sti
+    #sti
     jmp     5f
 
-4:
-    lidt    boot_idt_descr      # cpu != 0
+4: # cpu > 1
+    lidt    idtdesc      # cpu != 0
     call    local_apic_setup
     
     # Compute the basic stack addresses
@@ -60,7 +44,7 @@ reset_handler:
     subl    %eax, %ecx
     movl    %ecx, %esp
     
-    sti
+    #sti
 
 5:
     # Call cpu_start
@@ -68,42 +52,7 @@ reset_handler:
     jmp     * %eax
     nop
 
-idt_setup:
-    lea     ignore_int, %edx
-    movl    $__BOOT_CS << 16, %eax
-    movw    %dx, %ax        /* selector = 0x0010 = cs */
-    movw    $0x8E00, %dx    /* interrupt gate - dpl=0, present */
-
-    lea     boot_idt_table, %edi
-    mov     $256, %ecx
-rp_sidt:
-    movl    %eax, (%edi)
-    movl    %edx, 4(%edi)
-    addl    $8, %edi
-    dec     %ecx
-    jne     rp_sidt
-
-    .macro  set_early_handler handler, trapno
-            lea     \handler, %edx
-            movl    $__BOOT_CS << 16, %eax
-            movw    %dx, %ax
-            movw    $0x8E00, %dx    /* interrupt gate - dpl=0, present */
-            lea     boot_idt_table, %edi
-            movl    %eax,8 * \trapno (%edi)
-            movl    %edx, 8 * \trapno + 4(%edi)
-    .endm
-
-    set_early_handler handler = divide_err, trapno = 0
-    set_early_handler handler = illegal_opcode, trapno = 6
-    set_early_handler handler = protection_fault, trapno = 13
-    set_early_handler handler = timer_int, trapno = LOCAL_TIMER_VECTOR
-    set_early_handler handler = ipi_int, trapno = LAPIC_IPI_VECTOR
-    set_early_handler handler = lapic_error_int, trapno = LAPIC_ERROR_VECTOR
-
-    lidt    boot_idt_descr
-
-    ret /*idt_setup*/
-
+    .global lapic_error_int
 lapic_error_int:
     pusha
     call    cpu_mp_id
@@ -144,16 +93,19 @@ no_lapic:
     call    tty_print_info
     jmp     _hell_pit
 
+    .global divide_err
 divide_err:
     xor     %edx, %edx
     pushl   $0    /* fake errcode */
     jmp     fatal_fault
 
+    .global illegal_opcode
 illegal_opcode:
     movl    $6, %edx
     pushl   $0    /* fake errcode */
     jmp     fatal_fault
 
+    .global protection_fault
 protection_fault:
     movl    $13, %edx
     jmp     fatal_fault
@@ -168,7 +120,7 @@ fatal_fault:
     jmp     _hell_pit
 
     /* default interrupt handler */
-    .align  4
+    .global ignore_int
 ignore_int:
     pusha
     call    cpu_mp_id
@@ -178,9 +130,12 @@ ignore_int:
     add     $8, %esp
     popa
 
+    #EOI
+    movl    $0, (LAPIC_EOI + LOCAL_APIC_BASE)
+
     iret
 
-    .align 4
+    .global timer_int
 timer_int:
     pusha
 
@@ -189,7 +144,7 @@ timer_int:
     # push    $msg_timer_int
     # call    tty_print_info
     # add     $8, %esp
-    
+   
     pushl   $1
     movl    isr_timer, %eax
     call    * %eax
@@ -202,6 +157,7 @@ timer_int:
 
     iret
 
+    .global ipi_int
     .align 4
 ipi_int:
     pusha
@@ -236,30 +192,8 @@ _hell_pit:
 .data
     .align  4
 first_cpu: .long 1
-    .globl  boot_gdt_descr
-boot_gdt_descr:
-    .word   __BOOT_DS + 7
-    .long   boot_gdt
 
-    .align  16
-    .globl  boot_gdt
-boot_gdt:
-    .fill   GDT_ENTRY_BOOT_CS, 8, 0
-    .quad   0x00cf9b000000ffff // flat 32-bit code segment
-    .quad   0x00cf93000000ffff // flat 32-bit data segment
-
-    .align  4
-    .globl  boot_idt_descr
-boot_idt_descr:
-    .word   IDT_ENTRIES * 8 - 1   # idt contains 256 entries
-    .long   boot_idt_table
-    
-    .align  16
-    .globl  boot_idt_table
-boot_idt_table:
-    .fill   IDT_ENTRIES, 8, 0
-
-    # messages
+# messages
 msg_ignored_int: .string "An ignored interrupt occured on cpu %ld.\n"
 msg_fatal_fault: .string "Fatal interrupt %ld (code 0x%lx) occured on cpu %ld.\n"
 msg_hell_pit: .string "Hell pit reached by cpu %ld.\n"

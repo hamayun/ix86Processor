@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define CPU_TRAP_COUNT 8
+#define CPU_TRAP_COUNT 256
 
 typedef enum exception_id
 {
