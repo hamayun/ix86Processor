@@ -15,7 +15,7 @@ LAPIC_ERROR_VECTOR              = 0xEE
 LAPIC_IPI_VECTOR                = 0xED
 
     .code32
-    .section ".reset","ax"
+    .section ".reset", "ax"
 
     .globl reset_handler;
 reset_handler:
@@ -144,7 +144,7 @@ timer_int:
     # push    $msg_timer_int
     # call    tty_print_info
     # add     $8, %esp
-    
+   
     pushl   $1
     movl    isr_timer, %eax
     call    * %eax
@@ -192,20 +192,6 @@ _hell_pit:
 .data
     .align  4
 first_cpu: .long 1
-
-.global gdtdesc, gdt, idtdesc, idt
-.align 4
-gdtdesc:
-    .fill 6, 1, 0
-.align  16
-gdt:
-    .fill   6, 8, 0
-.align  4
-idtdesc:
-    .fill 6, 1, 0
-.align  16
-idt:
-    .fill   IDT_ENTRIES, 8, 0
 
 # messages
 msg_ignored_int: .string "An ignored interrupt occured on cpu %ld.\n"

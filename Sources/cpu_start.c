@@ -64,6 +64,10 @@ void smp_init (void)
     io_apic_init();
 }
 
+void setup_pgtab(void) {
+
+}
+
 void cpu_start (void)
 {
     int32_t cpu = cpu_mp_id ();
@@ -73,9 +77,9 @@ void cpu_start (void)
     }
     else {
         // CD: infinite loop for secondary processors, because dal channels are not yet thread-safe
-        //while(1) {
-        //    __asm__ __volatile__ ("hlt");
-        //}
+        while(1) {
+            __asm__ __volatile__ ("hlt");
+        }
 
         no_cpus_up++;
         cpus_up_mask |= 1 << cpu;
