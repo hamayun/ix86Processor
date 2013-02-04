@@ -67,7 +67,7 @@ void tsc_calibrate ()
     cpu_cycles_per_ms = tsc_delta / CALIBRATE_MS;
     cpu_bus_cycles_per_ms = (( 0xFFFFFFFF - local_timer_end)) / CALIBRATE_MS;
 
-    tty_print_info ("CPU frequency=%lldMHz, CPU Bus frequency=%lldMHz\n",
-        cpu_cycles_per_ms / 1000, cpu_bus_cycles_per_ms / 1000);
+    dna_printf ("CPU frequency=%lldMHz, CPU Bus frequency=%lldMHz\n",
+				cpu_cycles_per_ms / 1000, cpu_bus_cycles_per_ms / 1000);
 }
 
