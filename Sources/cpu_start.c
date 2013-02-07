@@ -64,7 +64,6 @@ void smp_init (void)
 #if 0
     io_apic_init();
 #endif
-    io_apic_init();
 }
 
 void setup_pgtab(void) {
