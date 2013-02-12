@@ -5,42 +5,51 @@
 void cpu_context_init(cpu_context_t * ctx, void * sp, int32_t ssize, void * entry, void * arg)
 {
     uintptr_t *pnewstack, *pctx, *ebp_orig;
-    uintptr_t ctx_save_start = 0;
+    uintptr_t ctx_start = 0;
 
     memset(ctx, 0, sizeof (cpu_context_t));
-    ctx_save_start = ((uintptr_t) ctx + CPU_CONTEXT_SIZE - sizeof(uintptr_t)) & ~0xF;
 
+	if(ctx & 0x3){
+		 dna_printf("Bad context alignment !!!");
+		 while(1);
+	}
+
+    ctx_start = (((uint8_t *)ctx) + CPU_CONTEXT_SIZE);
+
+#if 0
+	/* Do it at the end */
     // The first entry gives us the current location of push/pop pointer on context.
     *((uintptr_t *) ctx) = ctx_save_start;
+#endif
 
     // Get the 16-bit Aligned Address for our Stack Top.
     pnewstack = (uintptr_t *) (((uintptr_t) sp + ssize - sizeof(uintptr_t)) & ~0xF);
     ebp_orig = pnewstack;
 
     /* Get the context push/pop location; the first entry of context has it */
-    pctx = (uintptr_t *) *((uintptr_t *) ctx);
+    pctx = (uintptr_t *)ctx_start;
 
-    // "push (%%ebp) \n"                /* The ebp of calling thread's stack (ebp_orig) */
-    *--pctx = (uintptr_t) ebp_orig;     /* We consider the start of new stack is our original ebp */
+    // "push (%%ebp) \n"           /* ebp                           */
+    *--pctx = (uintptr_t)ebp_orig; /* start ebp is our original esp */
 
-    // "push 0x8(%%ebp) \n"             /* The (entry) address at which we should return; when the context is loaded */
-    *--pctx = (uintptr_t) entry;
+    // "push 0x8(%%ebp) \n"        /* return address                */
+    *--pctx = (uintptr_t) entry;   /*  is (entry) address           */
 
-    // "push %%ebp \n"                  /* Current position of the ebp_temp, its different from the thread stack's original ebp (ebp_orig) */
-    *--pctx = (uintptr_t) 0;            /* We dont know this yet, will patch it later into the context, see below */
+    // "push %%ebp \n"             /* esp                           */
+    *--pctx = (uintptr_t) 0;       /* will be patched later with args */
 
-    /* Push default flags ?? */
-    *--pctx = (uintptr_t) 0x00000246; /* EFLAGS */
+    /* "pushf \n" */
+    *--pctx = (uintptr_t) 0x00000246; /* EFLAGS: IF ZF PF reserved  */
 
-    /* general purpose registers default values */
-    *--pctx = (uintptr_t) 0; /* EDI */
-    *--pctx = (uintptr_t) 0; /* ESI */
-    *--pctx = (uintptr_t) 0; /* EBP */
-    *--pctx = (uintptr_t) 0; /* ESP; Ignored here */
-    *--pctx = (uintptr_t) 0; /* EBX */
-    *--pctx = (uintptr_t) 0; /* EDX */
-    *--pctx = (uintptr_t) 0; /* ECX */
-    *--pctx = (uintptr_t) 0; /* EAX */
+    /* "pusha \n"            GP registers default values */
+    *--pctx = (uintptr_t) 0;      /* EDI */
+    *--pctx = (uintptr_t) 0;      /* ESI */
+    *--pctx = (uintptr_t) 0;      /* EBP */
+    *--pctx = (uintptr_t) 0;      /* ESP; Ignored here */
+    *--pctx = (uintptr_t) 0;      /* EBX */
+    *--pctx = (uintptr_t) 0;      /* EDX */
+    *--pctx = (uintptr_t) 0;      /* ECX */
+    *--pctx = (uintptr_t) 0;      /* EAX */
 
     // Write (not push) the Argument on the stack's ebp_orig
     *pnewstack = (uintptr_t) arg;
@@ -53,10 +62,10 @@ void cpu_context_init(cpu_context_t * ctx, void * sp, int32_t ssize, void * entr
     pnewstack -= 3;
 
     // Patch the New Stack's address in the context as the context needs to know it for our ebp_temp (!ebp_orig)
-    *((uintptr_t *) ctx_save_start - 3) = (uintptr_t) pnewstack;
+    *((uintptr_t *) ctx_start - 3) = (uintptr_t) pnewstack;
 
     // Update our push/pop pointer in the first entry of our context
-    *((uintptr_t *) ctx) = (uintptr_t) pctx;
+    *((uintptr_t *) ctx_start) = (uintptr_t) pctx;
 
     #ifdef DEBUG_PROCESSOR_CONTEXT
     print_context(ctx);
