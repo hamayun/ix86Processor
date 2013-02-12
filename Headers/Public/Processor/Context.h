@@ -1,17 +1,17 @@
 #ifndef PROCESSOR_CONTEXT_H
 #define PROCESSOR_CONTEXT_H
 
-#ifndef __asm__
+#ifndef __ASSEMBLER__
 
 #include <stdint.h>
 #include <stdlib.h>
 
-#endif /* __asm__ */
+#endif /* __ASSEMBLER__ */
 
 //#define DEBUG_PROCESSOR_CONTEXT
 
-#define CPU_CTXT_CANARY0  0xAAAA5555
-#define CPU_CTXT_CANARY1  0xCCCC3333
+#define CPU_CTXT_CANARY0_VAL  0xAAAA5555
+#define CPU_CTXT_CANARY1_VAL  0xCCCC3333
 
 #define CPU_CONTEXT_NBREGS 12
 #define CPU_CONTEXT_SIZE 0x30
@@ -29,7 +29,7 @@
 #define CPU_CTXT_EIP       0x28
 #define CPU_CTXT_CANARY1   0x2C
 
-#ifndef __asm__
+#ifndef __ASSEMBLER__
 
 typedef volatile uintptr_t cpu_context_t [CPU_CONTEXT_NBREGS];
 
@@ -97,7 +97,7 @@ void cpu_context_load (cpu_context_t * ctx);
 #endif /* 0 */
 
 
-#endif /* __asm__ */
+#endif /* __ASSEMBLER__ */
 
 #endif
 

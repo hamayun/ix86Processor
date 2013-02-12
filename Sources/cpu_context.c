@@ -2,7 +2,7 @@
 #include <DnaTools/C.h>
 #include <string.h>
 
-#define SET_REGISTER(base, depl, val) ((*(uint32_t *)((uint8_t *)base) + depl) = val)
+#define SET_REGISTER(base, depl, val) ((*(uint32_t *)(((uint8_t *)base) + depl)) = val)
 
 void cpu_context_init(cpu_context_t * ctx, void * sp, int32_t ssize, void * entry, void * arg)
 {
@@ -10,38 +10,41 @@ void cpu_context_init(cpu_context_t * ctx, void * sp, int32_t ssize, void * entr
 
     memset(ctx, 0, sizeof (cpu_context_t));
 
-	/*
-	 * Setup stack
-	 */
-    // Get the 16-bit Aligned Address for our Stack Top.
+    /*
+     * Setup stack
+     */
+    /* Get the 16-bit Aligned Address for our Stack Top. */
+    /* BKS: 16-bit ????? */
     pnewstack = (uintptr_t *) (((uintptr_t) sp + ssize - sizeof(uintptr_t)) & ~0xF);
     ebp_orig = pnewstack;
 
-    // Write (not push) the Argument on the stack's ebp_orig
+    /* Write (not push) the Argument on the stack's ebp_orig */
     *pnewstack = (uintptr_t) arg;
 
-    // The Return Address in the New Stack; Obviousely it should be invalid.
-    *--pnewstack = 0xDEADBEAF;
+    /* The Return Address in the New Stack; Obviousely it should be invalid. */
+    *--pnewstack = 0xDEADBEEF;
 
-    // Now move the stack pointer down to make space for @entry, @ctx & ebp_orig;
-    // These will be restored by cpu_context_load from the context.
+    /*
+     * Now move the stack pointer down to make space for
+     * EBP, EFLAGS et EIP in cpu_context_load.
+    */
     pnewstack -= 3;
 
-	/*
-	 * Set registers
-	 */
-	SET_REGISTER(ctx, CPU_CTXT_CANARY0, CPU_CTXT_CANARY0_VAL);
-	SET_REGISTER(ctx, CPU_CTXT_EAX    , 0x00000000);
-	SET_REGISTER(ctx, CPU_CTXT_ECX    , 0x00000000);
-	SET_REGISTER(ctx, CPU_CTXT_EDX    , 0x00000000);
-	SET_REGISTER(ctx, CPU_CTXT_EBX    , 0x00000000);
-	SET_REGISTER(ctx, CPU_CTXT_ESP    , pnewstack);
-	SET_REGISTER(ctx, CPU_CTXT_EBP    , ebp_orig);
-	SET_REGISTER(ctx, CPU_CTXT_ESI    , 0x00000000);
-	SET_REGISTER(ctx, CPU_CTXT_EDI    , 0x00000000);
-	SET_REGISTER(ctx, CPU_CTXT_EFLAGS , 0x00000246); /* EFLAGS: IF ZF PF reserved  */
-	SET_REGISTER(ctx, CPU_CTXT_EIP    , entry);
-	SET_REGISTER(ctx, CPU_CTXT_CANARY1, CPU_CTXT_CANARY1_VAL);
+    /*
+     * Set registers
+     */
+    SET_REGISTER(ctx, CPU_CTXT_CANARY0, CPU_CTXT_CANARY0_VAL);
+    SET_REGISTER(ctx, CPU_CTXT_EAX    , 0x00000000);
+    SET_REGISTER(ctx, CPU_CTXT_ECX    , 0x00000000);
+    SET_REGISTER(ctx, CPU_CTXT_EDX    , 0x00000000);
+    SET_REGISTER(ctx, CPU_CTXT_EBX    , 0x00000000);
+    SET_REGISTER(ctx, CPU_CTXT_ESP    , pnewstack);
+    SET_REGISTER(ctx, CPU_CTXT_EBP    , ebp_orig);
+    SET_REGISTER(ctx, CPU_CTXT_ESI    , 0x00000000);
+    SET_REGISTER(ctx, CPU_CTXT_EDI    , 0x00000000);
+    SET_REGISTER(ctx, CPU_CTXT_EFLAGS , 0x00000246); /* EFLAGS: IF ZF PF reserved  */
+    SET_REGISTER(ctx, CPU_CTXT_EIP    , entry);
+    SET_REGISTER(ctx, CPU_CTXT_CANARY1, CPU_CTXT_CANARY1_VAL);
 
 
 
