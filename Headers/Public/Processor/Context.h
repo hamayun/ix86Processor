@@ -1,15 +1,37 @@
 #ifndef PROCESSOR_CONTEXT_H
 #define PROCESSOR_CONTEXT_H
 
+#ifndef __asm__
+
 #include <stdint.h>
 #include <stdlib.h>
 
+#endif /* __asm__ */
+
 //#define DEBUG_PROCESSOR_CONTEXT
 
-#define CPU_CONTEXT_NBREGS 32
+#define CPU_CTXT_CANARY0  0xAAAA5555
+#define CPU_CTXT_CANARY1  0xCCCC3333
+
+#define CPU_CONTEXT_NBREGS 12
+#define CPU_CONTEXT_SIZE 0x30
+
+#define CPU_CTXT_CANARY0   0x00
+#define CPU_CTXT_EAX       0x04
+#define CPU_CTXT_ECX       0x08
+#define CPU_CTXT_EDX       0x0C
+#define CPU_CTXT_EBX       0x10
+#define CPU_CTXT_ESP       0x14
+#define CPU_CTXT_EBP       0x18
+#define CPU_CTXT_ESI       0x1C
+#define CPU_CTXT_EDI       0x20
+#define CPU_CTXT_EFLAGS    0x24
+#define CPU_CTXT_EIP       0x28
+#define CPU_CTXT_CANARY1   0x2C
+
+#ifndef __asm__
 
 typedef volatile uintptr_t cpu_context_t [CPU_CONTEXT_NBREGS];
-#define CPU_CONTEXT_SIZE 128
 
 void cpu_context_init (cpu_context_t * ctx, void * sp, int32_t ssize, void * entry, void * arg);
 void cpu_context_save (cpu_context_t * ctx, uint32_t *entry);
@@ -21,6 +43,7 @@ void print_context_mem(cpu_context_t *ctx);
 void print_stack(void * stack_base, int32_t stack_size, int32_t n);
 #endif
 
+#if 0
 /*
 void cpu_context_save (cpu_context_t * ctx, uint32_t *entry);
 */
@@ -71,6 +94,10 @@ void cpu_context_load (cpu_context_t * ctx);
             "ret $0x4 \n"                                               \
         ::"a" ((unsigned long) (ctx)):);\
     } while (0)
+#endif /* 0 */
+
+
+#endif /* __asm__ */
 
 #endif
 
