@@ -58,5 +58,47 @@ struct pseudo_descriptor {
 #define SEL_PL_K        0x00                        /* kernel selector */
 #define SEL_PL_U        0x03                        /* user selector */
 
+// ADDED 02/2013
+struct ia32_regs {
+  unsigned int eax;
+  unsigned int ecx;
+  unsigned int edx;
+  unsigned int ebx;
+  unsigned int esp;
+  unsigned int ebp;
+  unsigned int esi;
+  unsigned int edi;
+  unsigned int eip;
+  unsigned int eflags;
+  unsigned int es;
+  unsigned int cs;
+  unsigned int ss;
+  unsigned int ds;
+  unsigned int fs;
+  unsigned int gs;
+};
+typedef struct ia32_regs Registers;
+
+#define INSN_BREAKPOINT 0xCC
+#define INSN_BREAKPOINT_NBYTES 1
+
+#define FRAME_POINTER(regs) (regs)->ebp
+#define STACK_POINTER(regs) (regs)->esp
+#define INSTRUCTION_POINTER(regs) (regs)->eip
+
+#define EXC_DB  1   // Debug exceptions
+#define EXC_BP  3   // Breakpoint
+
+static inline void cli(void) {
+    __asm__ __volatile__("cli":::"memory");
+}
+
+static inline void sti(void) {
+    __asm__ __volatile__("sti":::"memory");
+}
+
+// !ADDED 02/2013
+
+
 #endif
 
