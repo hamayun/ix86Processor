@@ -1,12 +1,7 @@
 #include <Processor/Processor.h>
 #include <Processor/apic_regs.h>
 
-/*
- * TODO: Remove this platform specific Header
- *       Move to Platform/Platform.h
- */
-#include <PCPlatformDriver/Driver.h>
-
+#include "apic.h"
 
 #define PIT_COUNTER_0       0x40
 #define PIT_COUNTER_1       0x41
