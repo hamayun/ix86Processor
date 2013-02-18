@@ -180,6 +180,46 @@ ipi_int:
 
     iret
 
+  .global debug
+debug:
+  #jmp ignore_int
+  push $do_debug
+  jmp no_error_code
+
+  .global int3
+int3:
+  #jmp ignore_int
+  push $do_int3
+  jmp no_error_code
+
+no_error_code:
+  xchgl %eax,(%esp)
+  pushl %ebx
+  pushl %ecx
+  pushl %edx
+  pushl %edi
+  pushl %esi
+  pushl %ebp
+  push %ds
+  push %es
+  push %fs
+  pushl $0      # "error code"
+  lea 44(%esp),%edx
+  pushl %edx
+  call *%eax
+  addl $8,%esp
+  pop %fs
+  pop %es
+  pop %ds
+  popl %ebp
+  popl %esi
+  popl %edi
+  popl %edx
+  popl %ecx
+  popl %ebx
+  popl %eax
+  iret
+
 _hell_pit:
     call    cpu_mp_id
     push    %eax

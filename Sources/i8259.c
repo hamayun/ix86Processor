@@ -1,6 +1,7 @@
 /* Intel 8259 - PIC (Programmable Interrupt Controller) */
 
 #include <Processor/Processor.h>
+#include <Core/Core.h>
 
 #include "i8259.h"
 
@@ -66,6 +67,7 @@ void i8259_enable(int irq) {
 }
 
 void i8259_disable(int irq) {
+    dna_printf("i8259: disabling irq %d\n", irq);
     if ((irq >= 0) && (irq <= 7)) {
         outb(inb(0x21) | (1 << irq), 0x21);
     } else if (irq <= 15) {

@@ -59,7 +59,15 @@ static inline void _set_gate(int gate, unsigned type, void *addr,
 }
 
 static inline void set_intr_gate(unsigned int n, void *addr) {
-    _set_gate(n, GATE_INTERRUPT, addr, 0, 0, KERNEL_CS);
+  _set_gate(n, GATE_INTERRUPT, addr, 0, 0, KERNEL_CS);
+}
+
+static inline void set_system_intr_gate(unsigned int n, void *addr) {
+  _set_gate(n, GATE_INTERRUPT, addr, 0x3, 0, KERNEL_CS);
+}
+
+static inline void set_trap_gate(unsigned int n, void *addr) {
+  _set_gate(n, GATE_TRAP, addr, 0, 0, KERNEL_CS);
 }
 
 extern void divide_err(void);
@@ -69,6 +77,9 @@ extern void timer_int(void);
 extern void ipi_int(void);
 extern void lapic_error_int(void);
 extern void ignore_int(void);
+
+extern void debug(void);
+extern void int3(void);
 
 #define LOCAL_TIMER_VECTOR 0XEF
 #define LAPIC_ERROR_VECTOR 0xEE
@@ -85,6 +96,8 @@ void cpu_idt_init(void) {
     }
 
     set_intr_gate(0, &divide_err);
+    set_trap_gate(1, &debug);
+    set_system_intr_gate(3, &int3);
     set_intr_gate(6, &illegal_opcode);
     set_intr_gate(13, &protection_fault);
 
