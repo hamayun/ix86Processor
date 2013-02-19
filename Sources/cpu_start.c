@@ -25,8 +25,7 @@
 
 extern void system_kickstart (void);
 
-void smp_init (void)
-{
+void smp_init (void) {
     extern char inc_secondary_start, inc_secondary_end;
 
     // set error vector to lapic
@@ -74,7 +73,7 @@ void cpu_start (void)
 {
     int32_t cpu = cpu_mp_id ();
 
-    if (!cpu)
+    if (!cpu) {
         smp_init ();
     }
     else {

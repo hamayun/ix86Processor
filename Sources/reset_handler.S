@@ -93,33 +93,7 @@ no_lapic:
     call    tty_print_info
     jmp     _hell_pit
 
-    .global divide_err
-divide_err:
-    xor     %edx, %edx
-    pushl   $0    /* fake errcode */
-    jmp     fatal_fault
 
-    .global illegal_opcode
-illegal_opcode:
-    movl    $6, %edx
-    pushl   $0    /* fake errcode */
-    jmp     fatal_fault
-
-    .global protection_fault
-protection_fault:
-    movl    $13, %edx
-    jmp     fatal_fault
-
-fatal_fault:
-    call    cpu_mp_id
-    push    %eax
-    push    %edx
-    push    $msg_fatal_fault
-    call    tty_print_info
-    add     $0x0C, %esp
-    jmp     _hell_pit
-
-    /* default interrupt handler */
     .global ignore_int
 ignore_int:
     pusha
@@ -132,20 +106,15 @@ ignore_int:
     push    $msg_ignored_int
     call    tty_print_info
     add     $8, %esp
+    
     popa
-
     iret
+
 
     .global timer_int
 timer_int:
     pusha
 
-    # call    cpu_mp_id
-    # push    %eax
-    # push    $msg_timer_int
-    # call    tty_print_info
-    # add     $8, %esp
- 
     #EOI
     movl    $0, (LAPIC_EOI + LOCAL_APIC_BASE)
 
@@ -155,20 +124,14 @@ timer_int:
     add     $4, %esp
 
     popa
-
     iret
+
 
     .global ipi_int
     .align 4
 ipi_int:
     pusha
 
-    # call    cpu_mp_id
-    # push    %eax
-    # push    $msg_timer_int
-    # call    tty_print_info
-    # add     $8, %esp
-    
     #EOI
     movl    $0, (LAPIC_EOI + LOCAL_APIC_BASE)
 
@@ -178,48 +141,8 @@ ipi_int:
     add     $4, %esp
 
     popa
-
     iret
 
-  .global debug
-debug:
-  #jmp ignore_int
-  push $do_debug
-  jmp no_error_code
-
-  .global int3
-int3:
-  #jmp ignore_int
-  push $do_int3
-  jmp no_error_code
-
-no_error_code:
-  xchgl %eax,(%esp)
-  pushl %ebx
-  pushl %ecx
-  pushl %edx
-  pushl %edi
-  pushl %esi
-  pushl %ebp
-  push %ds
-  push %es
-  push %fs
-  pushl $0      # "error code"
-  lea 44(%esp),%edx
-  pushl %edx
-  call *%eax
-  addl $8,%esp
-  pop %fs
-  pop %es
-  pop %ds
-  popl %ebp
-  popl %esi
-  popl %edi
-  popl %edx
-  popl %ecx
-  popl %ebx
-  popl %eax
-  iret
 
 _hell_pit:
     call    cpu_mp_id
@@ -236,7 +159,6 @@ first_cpu: .long 1
 
 # messages
 msg_ignored_int: .string "An ignored interrupt occured on cpu %ld.\n"
-msg_fatal_fault: .string "Fatal interrupt %ld (code 0x%lx) occured on cpu %ld.\n"
 msg_hell_pit: .string "Hell pit reached by cpu %ld.\n"
 msg_no_lapic: .string "No local local APIC found on this computer.\n"
 msg_timer_int: .string "Timer interrupt occured on cpu %ld.\n"
