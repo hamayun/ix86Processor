@@ -93,11 +93,24 @@ void cpu_idt_init(void) {
         set_intr_gate(i, &ignore_int);    
     }
 
-    set_intr_gate(0, &divide_err);
+    /* exceptions */
+    set_trap_gate(0, &divide_error);
     set_trap_gate(1, &debug);
+    set_trap_gate(2, &nmi);
     set_system_intr_gate(3, &int3);
-    set_intr_gate(6, &illegal_opcode);
-    set_intr_gate(13, &protection_fault);
+    set_system_intr_gate(4, &overflow);
+    set_system_intr_gate(5, &bounds);
+    set_trap_gate(6, &invalid_op);
+    set_trap_gate(7, &device_not_available);
+    set_trap_gate(8, &double_fault);
+    set_trap_gate(9, &coprocessor_segment_overrun);
+    set_trap_gate(10, &invalid_TSS);
+    set_trap_gate(11, &segment_not_present);
+    set_trap_gate(12, &stack_segment);
+    set_trap_gate(13, &general_protection);
+    //set_trap_gate(14, &page_fault);
+    set_trap_gate(15, &reserved);
+    set_trap_gate(16, &coprocessor_error); 
 
     set_intr_gate(LOCAL_TIMER_VECTOR, &timer_int);
     set_intr_gate(LAPIC_IPI_VECTOR, &ipi_int);

@@ -49,24 +49,28 @@ void i8259_init(void) {
 void i8259_master_handler(int irq) {
     interrupt_handler_t handler;
 
+    // send an ack to the master
+    // we do it before handling interrupt because of DNA architecture
+    outb(PIC_EOI, PIC_MST_CMD);
+
     handler = isr_i8259[irq];
     if(handler) {
         handler((void *)i8259_VECTOR_OFFSET + irq);
     }
-
-    outb(PIC_EOI, PIC_MST_CMD); // send an ack to the master
 }
 
 void i8259_slave_handler(int irq) {
     interrupt_handler_t handler;
 
+    // send an ack to the master and the slave
+    // we do it before handling interrupt because of DNA architecture
+    outb(PIC_EOI, PIC_SLV_CMD); // send an ack to the slave
+    outb(PIC_EOI, PIC_MST_CMD); // send an ack to the master
+
     handler = isr_i8259[irq];
     if(handler) {
         handler((void *)i8259_VECTOR_OFFSET + irq);
     }
-
-    outb(PIC_EOI, PIC_SLV_CMD); // send an ack to the slave
-    outb(PIC_EOI, PIC_MST_CMD); // send an ack to the master
 }
 
 void i8259_enable(int irq) {

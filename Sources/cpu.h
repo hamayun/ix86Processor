@@ -59,23 +59,25 @@ struct pseudo_descriptor {
 #define SEL_PL_U        0x03                        /* user selector */
 
 // ADDED 02/2013
+typedef unsigned long u32;
+
 struct ia32_regs {
-  unsigned int eax;
-  unsigned int ecx;
-  unsigned int edx;
-  unsigned int ebx;
-  unsigned int esp;
-  unsigned int ebp;
-  unsigned int esi;
-  unsigned int edi;
-  unsigned int eip;
-  unsigned int eflags;
-  unsigned int es;
-  unsigned int cs;
-  unsigned int ss;
-  unsigned int ds;
-  unsigned int fs;
-  unsigned int gs;
+  u32 eax;
+  u32 ecx;
+  u32 edx;
+  u32 ebx;
+  u32 esp;
+  u32 ebp;
+  u32 esi;
+  u32 edi;
+  u32 eip;
+  u32 eflags;
+  u32 es;
+  u32 cs;
+  u32 ss;
+  u32 ds;
+  u32 fs;
+  u32 gs;
 };
 typedef struct ia32_regs Registers;
 
@@ -99,6 +101,23 @@ static inline void sti(void) {
 
 // !ADDED 02/2013
 
+extern void divide_error(void);
+extern void debug(void);
+extern void nmi(void);
+extern void int3(void);
+extern void overflow(void);
+extern void bounds(void);
+extern void invalid_op(void);
+extern void device_not_available(void);
+extern void double_fault(void);
+extern void coprocessor_segment_overrun(void);
+extern void invalid_TSS(void);
+extern void segment_not_present(void);
+extern void stack_segment(void);
+extern void general_protection(void);
+extern void page_fault(void);
+extern void coprocessor_error(void);
+extern void reserved(void);
 
 #endif
 

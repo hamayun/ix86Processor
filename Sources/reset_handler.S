@@ -123,15 +123,16 @@ fatal_fault:
     .global ignore_int
 ignore_int:
     pusha
+    
+    #EOI
+    movl    $0, (LAPIC_EOI + LOCAL_APIC_BASE)
+
     call    cpu_mp_id
     push    %eax
     push    $msg_ignored_int
     call    tty_print_info
     add     $8, %esp
     popa
-
-    #EOI
-    movl    $0, (LAPIC_EOI + LOCAL_APIC_BASE)
 
     iret
 
@@ -144,14 +145,14 @@ timer_int:
     # push    $msg_timer_int
     # call    tty_print_info
     # add     $8, %esp
-   
+ 
+    #EOI
+    movl    $0, (LAPIC_EOI + LOCAL_APIC_BASE)
+
     pushl   $1
     movl    isr_timer, %eax
     call    * %eax
     add     $4, %esp
-
-    #EOI
-    movl    $0, (LAPIC_EOI + LOCAL_APIC_BASE)
 
     popa
 
@@ -168,13 +169,13 @@ ipi_int:
     # call    tty_print_info
     # add     $8, %esp
     
+    #EOI
+    movl    $0, (LAPIC_EOI + LOCAL_APIC_BASE)
+
     pushl   $1
     movl    isr_ipi, %eax
     call    * %eax
     add     $4, %esp
-
-    #EOI
-    movl    $0, (LAPIC_EOI + LOCAL_APIC_BASE)
 
     popa
 

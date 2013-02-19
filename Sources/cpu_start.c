@@ -76,8 +76,13 @@ void cpu_start (void)
 
     if (!cpu)
         smp_init ();
-     else
-     {
+    }
+    else {
+        // CD: infinite loop for secondary processors, because it is not working yet
+        /*while(1) {
+            __asm__ __volatile__ ("hlt");
+        }*/
+
         no_cpus_up++;
         cpus_up_mask |= 1 << cpu;
 
