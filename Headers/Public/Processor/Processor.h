@@ -19,13 +19,16 @@ extern uint64_t             cpu_bus_cycles_per_ms;
 extern volatile int32_t     no_cpus_up;
 extern volatile uint32_t    cpus_up_mask;
 
+#define MAX_CPU_COUNT 32
+
 typedef struct
 {
     int32_t     command;
     void        *data;
     int32_t     status;
 } cpu_ipi_par;
-extern volatile cpu_ipi_par cpu_ipi_pars[32];
+
+extern volatile cpu_ipi_par cpu_ipi_pars[MAX_CPU_COUNT];
 
 #endif
 

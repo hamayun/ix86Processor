@@ -3,6 +3,8 @@
 #include <string.h>
 
 #define SET_REGISTER(base, depl, val) ((*(uint32_t *)(((uint8_t *)base) + depl)) = val)
+// This is used by AnnotationManager
+volatile uint32_t current_thread_context = 0xFFFFFFFF;
 
 void cpu_context_init(cpu_context_t * ctx, void * sp, int32_t ssize, void * entry, void * arg)
 {

@@ -19,11 +19,7 @@
 #include <Platform/Platform.h>
 #include <Processor/apic_regs.h>
 
-/*
- * TODO: Remove this platform specific Header
- *       Move to Platform/Platform.h
- */
-#include <PCPlatformDriver/Driver.h>
+#include "apic.h"
 
 void cpu_timer_set (int32_t id, bigtime_t ns)
 {

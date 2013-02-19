@@ -16,11 +16,11 @@
  */
 
 #include <Processor/Processor.h>
-#include <PCPlatformDriver/Driver.h>
 #include <Processor/apic_regs.h>
 #include <string.h>
 
 #include "i8259.h"
+#include "apic.h"
 #include "io_apic.h"
 
 extern void system_kickstart (void);
@@ -43,7 +43,7 @@ void smp_init (void)
 
     // send SIPI
     int32_t   cpu, i;
-    for (cpu = 1; cpu <= 9; cpu++)
+    for (cpu = 1; cpu <= MAX_CPU_COUNT; cpu++)
     {
         local_apic_mem[LAPIC_ICR_HIGH >> 2] = cpu << 24;
         local_apic_mem[LAPIC_ICR_LOW >> 2] = 0x00004630;
@@ -74,15 +74,10 @@ void cpu_start (void)
 {
     int32_t cpu = cpu_mp_id ();
 
-    if (!cpu) {
+    if (!cpu)
         smp_init ();
-    }
-    else {
-        // CD: infinite loop for secondary processors, because dal channels are not yet thread-safe
-        while(1) {
-            __asm__ __volatile__ ("hlt");
-        }
-
+     else
+     {
         no_cpus_up++;
         cpus_up_mask |= 1 << cpu;
 

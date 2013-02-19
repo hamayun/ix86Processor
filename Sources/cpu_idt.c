@@ -40,8 +40,6 @@ static inline void write_idt_entry(gate_desc *idt, int entry, const gate_desc *g
       memcpy(&idt[entry], gate, sizeof(*gate));
 }
 
-typedef struct desc_struct gate_desc;
-
 static inline void pack_gate(gate_desc *gate, unsigned char type,
            unsigned long base, unsigned dpl, unsigned flags,
            unsigned short seg) {

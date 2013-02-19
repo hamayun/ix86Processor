@@ -19,11 +19,7 @@
 #include <Processor/apic_regs.h>
 #include <Platform/Platform.h>
 
-/*
- * TODO: Remove this platform specific Header
- *       Move to Platform/Platform.h
- */
-#include <PCPlatformDriver/Driver.h>
+#include "apic.h"
 
 void cpu_timer_cancel (int32_t id)
 {
