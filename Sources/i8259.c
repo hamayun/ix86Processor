@@ -52,7 +52,7 @@ void i8259_master_handler(int irq) {
     // send an ack to the master
     // we do it before handling interrupt because of DNA architecture
     outb(PIC_EOI, PIC_MST_CMD);
-
+    
     handler = isr_i8259[irq];
     if(handler) {
         handler((void *)i8259_VECTOR_OFFSET + irq);
