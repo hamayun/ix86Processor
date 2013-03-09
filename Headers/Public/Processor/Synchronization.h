@@ -13,6 +13,10 @@ static inline int32_t cpu_compare_and_swap (volatile int32_t * p_val, int32_t ol
 		     : "=a" (prev)
 		     : "r" (newval), "m" (* p_val), "0" (oldval)
 		     : "memory");
+//	if(prev)
+//	 	dna_printf("CnS: rval = %d\n", prev);
+	if(prev)
+	 	dna_printf("-");
 
 	return prev;
 }
