@@ -13,10 +13,11 @@ static inline int32_t cpu_compare_and_swap (volatile int32_t * p_val, int32_t ol
 		     : "=a" (prev)
 		     : "r" (newval), "m" (* p_val), "0" (oldval)
 		     : "memory");
-//	if(prev)
-//	 	dna_printf("CnS: rval = %d\n", prev);
-	if(prev)
-	 	dna_printf("-");
+	/*
+	if(prev){
+	 	// dna_printf("CnS: rval = %d\n", prev);
+        cpu_io_write(UINT32,0x1000,1);
+	}*/
 
 	return prev;
 }
@@ -26,6 +27,32 @@ static inline int cpu_test_and_set (volatile long int * spinlock)
 {
     return cpu_compare_and_swap (spinlock, 0, 1);
 }
+
+
+/*
+static inline int cpu_test_and_set (volatile long int * spinlock)
+{
+    // It's not ok with smp. Use cmpxchg instead.
+    int oldValue;
+    oldValue = *spinlock;
+    *spinlock = 1;
+    return oldValue;
+}
+*/
+
+/*
+static inline int cpu_test_and_set (volatile long int * spinlock)
+{
+    long int ret;
+
+    do {
+        if((ret = p_io->load_linked((uint32_t*)spinlock, m_cpu_id)) != 0)
+            break;
+    } while((ret = p_io->store_cond((uint32_t*)spinlock, 1, m_cpu_id)) != 0);
+    
+    return ret;
+}
+*/
 
 #endif
 
