@@ -36,6 +36,7 @@ void smp_init (void) {
 
     // broadcast INIT IPI
     local_apic_mem[LAPIC_ICR_LOW >> 2] = 0x000C4500;
+	// TODO: Replace with sc_wait
     blocking_usleep (10000);
 
     memcpy ((void *) 0x30000, &inc_secondary_start, &inc_secondary_end - &inc_secondary_start);
@@ -49,6 +50,7 @@ void smp_init (void) {
 
         for (i = 0; i < 1000; i++)
         {
+			// TODO: Replace with sc_wait
             blocking_usleep (100);
             if (no_cpus_up == cpu + 1)
                 break;

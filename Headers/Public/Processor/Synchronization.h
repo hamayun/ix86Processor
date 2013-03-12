@@ -13,9 +13,9 @@ static inline int32_t cpu_compare_and_swap (volatile int32_t * p_val, int32_t ol
 		     : "=a" (prev)
 		     : "r" (newval), "m" (* p_val), "0" (oldval)
 		     : "memory");
-	/*
+
+	/* MMH: Activating this I/O generates a lot of random MMIOs in KVM
 	if(prev){
-	 	// dna_printf("CnS: rval = %d\n", prev);
         cpu_io_write(UINT32,0x1000,1);
 	}*/
 
@@ -28,7 +28,11 @@ static inline int cpu_test_and_set (volatile long int * spinlock)
     return cpu_compare_and_swap (spinlock, 0, 1);
 }
 
-
+/*
+ * MMH: Some examples previous test and set implementations in Native Simulation.
+ * May give some ideas for a different implementation of the KVM based Native simulation using SC_THREADs only.
+ */
+     
 /*
 static inline int cpu_test_and_set (volatile long int * spinlock)
 {
