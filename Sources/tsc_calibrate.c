@@ -12,6 +12,8 @@
 #define CALIBRATE_MS       50
 #define CALIBRATE_LATCH	   (PIT_FQ / (1000 / CALIBRATE_MS))
 
+#define SYSTEMC_WAIT_PORT	0x2000
+
 uint64_t                    cpu_cycles_per_ms __attribute__((__section__(".data")));
 uint64_t                    cpu_bus_cycles_per_ms __attribute__((__section__(".data")));
 
@@ -22,6 +24,13 @@ void blocking_usleep (int us)
 	tsc_end = get_cycles () + (us * cpu_cycles_per_ms) / 1000;
 	
 	while (get_cycles () < tsc_end) ;
+}
+
+// Ask SystemC to wait for given micro seconds
+void blocking_usleep_systemc (int us)
+{
+//    tty_print_info ("%s: VCPU-%d Blocking Sleep for %d US\n", __func__, cpu_mp_id(), us);
+	cpu_io_write(UINT32,SYSTEMC_WAIT_PORT,us);
 }
 
 void blocking_nsleep (int ns)
