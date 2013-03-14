@@ -14,10 +14,10 @@ static inline int32_t cpu_compare_and_swap (volatile int32_t * p_val, int32_t ol
 		     : "r" (newval), "m" (* p_val), "0" (oldval)
 		     : "memory");
 
-	/* MMH: Activating this I/O generates a lot of random MMIOs in KVM
+	// MMH: Activating this I/O generates a lot of random MMIOs in KVM
 	if(prev){
         cpu_io_write(UINT32,0x1000,1);
-	}*/
+	}
 
 	return prev;
 }
