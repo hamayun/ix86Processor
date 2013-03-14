@@ -1,10 +1,11 @@
 #ifndef PROCESSOR_SYNCHRONIZATION_H
 #define PROCESSOR_SYNCHRONIZATION_H
 
+#define SYSTEMC_TEST_N_SET_PORT 0x3000
+
 /* static inline long int cpu_compare_and_swap (volatile long int * p_val, long int oldval, long int newval) { */
 static inline int32_t cpu_compare_and_swap (volatile int32_t * p_val, int32_t oldval, int32_t newval)
 {
-    //return 0 => ok
     unsigned char prev;
     
 	__asm__ volatile (
@@ -14,24 +15,25 @@ static inline int32_t cpu_compare_and_swap (volatile int32_t * p_val, int32_t ol
 		     : "r" (newval), "m" (* p_val), "0" (oldval)
 		     : "memory");
 
-	// MMH: Activating this I/O generates a lot of random MMIOs in KVM
-	if(prev){
-        cpu_io_write(UINT32,0x1000,1);
-	}
-
+    // if return 0 => OK; Lock Successfully Taken
 	return prev;
 }
 
 /* static inline long int cpu_test_and_set (volatile long int * spinlock) { */
 static inline int cpu_test_and_set (volatile long int * spinlock)
 {
-    return cpu_compare_and_swap (spinlock, 0, 1);
-}
+    int my_cpu_id = cpu_mp_id() + 1;
+	int locker_cpu_id = 0;	// Zero means unlocked
 
-/*
- * MMH: Some examples previous test and set implementations in Native Simulation.
- * May give some ideas for a different implementation of the KVM based Native simulation using SC_THREADs only.
- */
+    locker_cpu_id = cpu_compare_and_swap (spinlock, 0, my_cpu_id);
+	if(locker_cpu_id != 0)
+	{
+		cpu_io_write(UINT32, SYSTEMC_TEST_N_SET_PORT, locker_cpu_id);
+		return 1;		// Try Again
+	}
+	else
+		return 0;		// OK, now the current CPU has this lock
+}
      
 /*
 static inline int cpu_test_and_set (volatile long int * spinlock)
