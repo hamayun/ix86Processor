@@ -31,18 +31,20 @@ static inline int cpu_test_and_set (volatile long int * spinlock)
 		if(locker_cpu_id != my_cpu_id)
 		{
 			cpu_io_write(UINT32, SYSTEMC_TEST_N_SET_PORT, locker_cpu_id);
-			return 1;		// Try Again after the other CPU has run for some tim 
+			return 1;		// Try Again after the other CPU has run for some time 
 		}
 		else
 		{
-			dna_printf("-");
-			return 1;		// Try Again Immediatly 
+			dna_printf("-");			// This print makes the simulation progress for some unknown reasons.
+//			blocking_usleep_systemc (20);
+			return 1;		// This means we have a deadlock; And this somehow happens when 
+							// Verbose Level Logs are enabled in DNA-OS
 		}
 	}
 	else
 		return 0;		// OK, now the current CPU has this lock
 }
-     
+   
 /*
 static inline int cpu_test_and_set (volatile long int * spinlock)
 {
