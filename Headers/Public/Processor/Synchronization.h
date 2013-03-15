@@ -28,8 +28,16 @@ static inline int cpu_test_and_set (volatile long int * spinlock)
     locker_cpu_id = cpu_compare_and_swap (spinlock, 0, my_cpu_id);
 	if(locker_cpu_id != 0)
 	{
-		cpu_io_write(UINT32, SYSTEMC_TEST_N_SET_PORT, locker_cpu_id);
-		return 1;		// Try Again
+		if(locker_cpu_id != my_cpu_id)
+		{
+			cpu_io_write(UINT32, SYSTEMC_TEST_N_SET_PORT, locker_cpu_id);
+			return 1;		// Try Again after the other CPU has run for some tim 
+		}
+		else
+		{
+			dna_printf("-");
+			return 1;		// Try Again Immediatly 
+		}
 	}
 	else
 		return 0;		// OK, now the current CPU has this lock
