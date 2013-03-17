@@ -3,20 +3,23 @@
 
 #define SYSTEMC_TEST_N_SET_PORT 0x3000
 
-/* static inline long int cpu_compare_and_swap (volatile long int * p_val, long int oldval, long int newval) { */
-static inline int32_t cpu_compare_and_swap (volatile int32_t * p_val, int32_t oldval, int32_t newval)
+/* static inline long int cpu_compare_and_swap (volatile long int * spinlock, long int oldval, long int newval) { */
+static inline int32_t cpu_compare_and_swap (volatile int32_t * spinlock, int32_t oldval, int32_t newval)
 {
     unsigned char prev;
+	int32_t locker_id = *spinlock;
     
 	__asm__ volatile (
         "lock cmpxchgl %1, %2\n"
     	"setne %%al"
 		     : "=a" (prev)
-		     : "r" (newval), "m" (* p_val), "0" (oldval)
+		     : "r" (newval), "m" (* spinlock), "0" (oldval)
 		     : "memory");
 
-    // if return 0 => OK; Lock Successfully Taken
-	return prev;
+	if(prev == 0)
+		return 0; // Lock Successfully Taken and no other locker had this lock taken
+	else
+		return (locker_id);
 }
 
 /* static inline long int cpu_test_and_set (volatile long int * spinlock) { */
@@ -30,16 +33,10 @@ static inline int cpu_test_and_set (volatile long int * spinlock)
 	{
 		if(locker_cpu_id != my_cpu_id)
 		{
+			// if the lock is taken by some one else try to tell him
 			cpu_io_write(UINT32, SYSTEMC_TEST_N_SET_PORT, locker_cpu_id);
-			return 1;		// Try Again after the other CPU has run for some time 
 		}
-		else
-		{
-			dna_printf("-");			// This print makes the simulation progress for some unknown reasons.
-//			blocking_usleep_systemc (20);
-			return 1;		// This means we have a deadlock; And this somehow happens when 
-							// Verbose Level Logs are enabled in DNA-OS
-		}
+		return 1;		// Try Again;
 	}
 	else
 		return 0;		// OK, now the current CPU has this lock
