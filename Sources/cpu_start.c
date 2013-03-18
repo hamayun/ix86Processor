@@ -34,11 +34,13 @@ void smp_init (void) {
     lvt_err |= LAPIC_ERROR_VECTOR;
     local_apic_mem[LAPIC_LVT_ERR >> 2] = lvt_err;
 
+	// copy the secondary cpu startup code
+    memcpy ((void *) 0x30000, &inc_secondary_start, &inc_secondary_end - &inc_secondary_start);
+
     // broadcast INIT IPI
     local_apic_mem[LAPIC_ICR_LOW >> 2] = 0x000C4500;
-    blocking_usleep (10000);
 
-    memcpy ((void *) 0x30000, &inc_secondary_start, &inc_secondary_end - &inc_secondary_start);
+    blocking_usleep_systemc (10000);
 
     // send SIPI
     int32_t   cpu, i;
@@ -49,7 +51,8 @@ void smp_init (void) {
 
         for (i = 0; i < 1000; i++)
         {
-            blocking_usleep (100);
+    		blocking_usleep_systemc (100);
+
             if (no_cpus_up == cpu + 1)
                 break;
         }
